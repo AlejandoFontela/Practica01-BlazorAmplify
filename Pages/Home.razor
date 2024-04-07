@@ -1,0 +1,47 @@
+﻿@page "/"
+
+@using BlazorApp.Services
+@using System.Collections.Generic
+
+<PageTitle>AppBlazor</PageTitle>
+
+<h1>Bienvenido a mi aplicacion con Blazor!</h1>
+
+<p>Consumiendo API desde GifTenor</p>
+
+@foreach (var media in filteredMediaItems)
+{
+    <img src="@media.Preview" alt="Preview" />
+}
+
+@code {
+    private List<MediaItem> mediaItems;
+    private List<MediaItem> filteredMediaItems; // Nueva variable para almacenar los objetos filtrados
+    private MyHttpClient myHttpClient;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var httpClient = new HttpClient();
+        myHttpClient = new MyHttpClient(httpClient);
+        mediaItems = await myHttpClient.GetMediaItemsAsync();
+
+        // Agrupar los objetos por el valor "hhgf" en la URL
+        var groupedMediaItems = mediaItems.GroupBy(item => GetHhgfValue(item.Url));
+
+        // Seleccionar solo un objeto de cada grupo
+        filteredMediaItems = groupedMediaItems.Select(group => group.First()).ToList();
+
+        var json = JsonConvert.SerializeObject(filteredMediaItems, Formatting.Indented);
+        Console.WriteLine(json);
+    }
+
+    private string GetHhgfValue(string url)
+    {
+        // Obtiene el valor "hhgf" de la URL
+        var startIndex = url.LastIndexOf('/') + 1;
+        var endIndex = url.IndexOf('.', startIndex);
+        return url.Substring(startIndex, endIndex - startIndex);
+    }
+}
+
+
